@@ -7,6 +7,8 @@
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
     <name>Discloud for Kotlin/Java Engineers</name>
 
+    <version>1.0.0</version>
+
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor url="https://discloud.com/">Discloud</vendor>
 
@@ -25,4 +27,13 @@
     <extensions defaultExtensionNs="com.intellij">
         <applicationConfigurable instance="com.discloudplugin.discloud.settings.ApiKeyConfigurable"/>
     </extensions>
+
+    <actions>
+        <action class="com.discloudplugin.discloud.actions.CommitDiscloudAction"
+                id="CommitAction"
+                text="Commit Discloud"
+                description="Envie seu .jar para a Discloud.">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </action>
+    </actions>
 </idea-plugin>
