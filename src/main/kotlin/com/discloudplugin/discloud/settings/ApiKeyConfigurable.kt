@@ -1,35 +1,36 @@
 package com.discloudplugin.discloud.settings
 
 import com.intellij.openapi.options.Configurable
-import com.intellij.openapi.util.NlsContexts
-import javax.swing.BoxLayout
-import javax.swing.JComponent
-import javax.swing.JLabel
-import javax.swing.JPanel
+import com.intellij.openapi.ui.DialogPanel
+import com.intellij.ui.dsl.builder.bindText
+import com.intellij.ui.dsl.builder.panel
 import javax.swing.JTextField
 
 class ApiKeyConfigurable : Configurable {
-    private var apiKeyField = JTextField()
-    private var panel = JPanel()
-
-    init {
-        panel.layout = BoxLayout(panel, BoxLayout.Y_AXIS)
-        panel.add(JLabel("Digite aqui sua APIKey da Discloud:"))
-        panel.add(apiKeyField)
-    }
+    private var apiKeyField = JTextField(25)
+    private lateinit var mainPanel: DialogPanel
 
     override fun getDisplayName(): String = "Discloud Plugin - Settings"
-    override fun createComponent(): JComponent = panel
-    override fun isModified(): Boolean {
-        val saved = ApiKeyState.getInstance().apiKey ?: ""
-        return saved != apiKeyField.text
+
+    override fun createComponent(): DialogPanel {
+        val state = ApiKeyState.getInstance()
+
+        mainPanel = panel {
+            group("Configuração da Discloud") {
+                row("API Key:") {
+                    cell(apiKeyField)
+                        .bindText({ state.apiKey ?: "" }, { state.apiKey = it })
+                        .resizableColumn()
+                }
+                row {
+                    comment("Cole aqui sua API Key da Discloud. Você pode obter em <a href='https://docs.discloud.com/suporte/comandos/api'>discloud.com</a>.")
+                }
+            }
+        }
+        return mainPanel
     }
 
-    override fun apply() {
-        ApiKeyState.getInstance().apiKey = apiKeyField.text
-    }
-
-    override fun reset() {
-        apiKeyField.text = ApiKeyState.getInstance().apiKey ?: ""
-    }
+    override fun isModified(): Boolean = mainPanel.isModified()
+    override fun apply() = mainPanel.apply()
+    override fun reset() = mainPanel.reset()
 }

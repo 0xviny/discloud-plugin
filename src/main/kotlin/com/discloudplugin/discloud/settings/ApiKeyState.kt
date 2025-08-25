@@ -1,6 +1,7 @@
 package com.discloudplugin.discloud.settings
 
 import com.intellij.openapi.components.PersistentStateComponent
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 
@@ -8,6 +9,7 @@ import com.intellij.openapi.components.Storage
     name = "DiscloudApiKeyState",
     storages = [Storage("discloud.xml")]
 )
+@Service(Service.Level.APP)
 class ApiKeyState : PersistentStateComponent<ApiKeyState> {
     var apiKey: String? = null
 

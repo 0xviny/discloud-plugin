@@ -10,11 +10,12 @@ Ideal para desenvolvedores Kotlin/Java que desejam agilizar o processo de deploy
 
 ## ✨ Funcionalidades
 
-- 🔑 Configuração da **API Key da Discloud** diretamente no IntelliJ (Settings → Discloud Settings).  
-- 🚀 Clique com o botão direito em qualquer `.jar` no seu projeto e envie instantaneamente para a Discloud (**Commit Discloud**).  
-- 🛠️ Integração com a [API oficial da Discloud](https://discloud.github.io/apidoc/).  
-- 📦 Persistência da API Key nas configurações do IntelliJ (não precisa reconfigurar sempre).  
-- 📋 Feedback direto no IDE com status e resposta da API.  
+- 🔑 Configuração da **API Key da Discloud** diretamente no IntelliJ (Settings → Discloud Settings)  
+- 🚀 Clique com o botão direito em qualquer `.jar` no seu projeto e envie instantaneamente para a Discloud (**Commit Discloud**)  
+- 🛠️ Integração com a [API oficial da Discloud](https://discloud.github.io/apidoc/)  
+- 📦 Persistência da API Key nas configurações do IntelliJ  
+- 📋 Feedback direto no IDE com status e resposta da API  
+- 🖥️ **Tool Window** para gerenciar aplicativos: listar apps, status online/offline, iniciar/parar e visualizar logs  
 
 ---
 
@@ -27,12 +28,11 @@ Atualmente o plugin ainda não está publicado na JetBrains Marketplace, então 
    git clone https://github.com/0xviny/discloud-plugin.git
    cd discloud-plugin
 
-2. Abra o projeto no **IntelliJ IDEA** (Community ou Ultimate).
-
+2. Abra o projeto no **IntelliJ IDEA** (Community ou Ultimate)
 3. Rode o plugin:
 
     * Vá em **Gradle Tool Window → Tasks → intellij → runIde**
-    * O IntelliJ abrirá em modo sandbox com o plugin carregado.
+    * O IntelliJ abrirá em modo sandbox com o plugin carregado
 
 ---
 
@@ -41,7 +41,7 @@ Atualmente o plugin ainda não está publicado na JetBrains Marketplace, então 
 Na **primeira inicialização** do plugin, será solicitado que você insira sua **API Key da Discloud**.
 Você também pode alterar depois em:
 
-File → Settings → Tools → Discloud Settings
+`File → Settings → Tools → Discloud Settings`
 
 > Sua chave é salva localmente em um arquivo de configuração do IntelliJ (`discloud.xml`) e usada em todos os commits seguintes.
 
@@ -49,10 +49,26 @@ File → Settings → Tools → Discloud Settings
 
 ## 🚀 Como usar
 
-1. Compile ou gere seu `.jar` do projeto.
-2. No **Project Explorer**, clique com o botão direito no arquivo `.jar`.
-3. Clique em **Commit Discloud**.
-4. O plugin fará o upload para a Discloud e mostrará o resultado no IntelliJ.
+1. Compile ou gere seu `.jar` do projeto
+2. No **Project Explorer**, clique com o botão direito no arquivo `.jar`
+3. Clique em **Commit Discloud**
+4. O plugin fará o upload para a Discloud e mostrará o resultado no IntelliJ
+
+---
+
+## 📝 Histórico de Versões
+
+### 1.0.0 - Initial Version
+
+* Adicionado **Tool Window** para gerenciar apps da Discloud (listar apps, status online/offline)
+* Implementado botão **Start** e **Stop** para iniciar/parar aplicativos
+* Implementado botão **Refresh** para atualizar a lista de apps
+* Implementado botão **Logs** para visualizar os logs do terminal de cada app
+* Integração completa com a **Discloud API** usando API Key configurável
+* Status dos apps exibido diretamente no **Tool Window** do IntelliJ
+* Persistência da **API Key** nas configurações do IntelliJ
+* Ação de **Commit Discloud** para enviar `.jar` diretamente para a Discloud via clique direito
+* Feedback direto no IDE com respostas da API (upload, start, stop, logs)
 
 ---
 
@@ -60,9 +76,9 @@ File → Settings → Tools → Discloud Settings
 
 * [x] Commit de arquivos `.jar` via API da Discloud
 * [x] Persistência e configuração da API Key
-* [ ] Tool Window lateral para gerenciar aplicativos (listar apps, iniciar/parar/reiniciar, logs etc.)
+* [x] Tool Window lateral para gerenciar aplicativos (listar apps, iniciar/parar/reiniciar, logs etc.)
 * [ ] Suporte a commits automáticos após build
-* [ ] Publicação no JetBrains Marketplace
+* [x] Publicação no JetBrains Marketplace
 
 ---
 
@@ -75,12 +91,12 @@ Abra uma **Issue** ou envie um **Pull Request** com melhorias, correções ou no
 
 ## 📜 Licença
 
-Este projeto é distribuído sob a licença **MIT**.
-Veja o arquivo [LICENSE](LICENSE) para mais informações.
+Este projeto é distribuído sob a licença **MIT**
+Veja o arquivo [LICENSE](LICENSE) para mais informações
 
 ---
 
 ## 💙 Créditos
 
-* [Discloud](https://discloud.com/) — hospedagem oficial.
-* [IntelliJ Platform SDK](https://plugins.jetbrains.com/docs/intellij/welcome.html) — base para desenvolvimento de plugins.
+* [Discloud](https://discloud.com/) — hospedagem oficial
+* [IntelliJ Platform SDK](https://plugins.jetbrains.com/docs/intellij/welcome.html) — base para desenvolvimento de plugins

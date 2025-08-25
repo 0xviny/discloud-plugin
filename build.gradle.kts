@@ -2,6 +2,7 @@ plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "2.1.0"
     id("org.jetbrains.intellij.platform") version "2.5.0"
+    kotlin("plugin.serialization") version "1.9.10"
 }
 
 group = "com.discloud-plugin"
@@ -20,6 +21,8 @@ dependencies {
     intellijPlatform {
         create("IC", "2025.1")
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
+        implementation("org.json:json:20250517")
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
         // Add necessary plugin dependencies for compilation here, example:
         // bundledPlugin("com.intellij.java")
@@ -33,8 +36,17 @@ intellijPlatform {
         }
 
         changeNotes = """
-            Initial version
-        """.trimIndent()
+    Initial version
+    - Added Discloud tool window for managing apps
+    - Implemented app start and stop buttons
+    - Added refresh button to reload app list
+    - Added logs button to view terminal logs
+    - Integrated Discloud API client with authentication
+    - Display app status (online/offline) in the tool window
+    - Configurable API key through settings
+    - Added plugin actions for committing .jar files and opening the tool window
+""".trimIndent()
+
     }
 }
 
