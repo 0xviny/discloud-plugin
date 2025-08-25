@@ -26,7 +26,6 @@ Atualmente o plugin ainda não está publicado na JetBrains Marketplace, então 
    ```bash
    git clone https://github.com/0xviny/discloud-plugin.git
    cd discloud-plugin
-```
 
 2. Abra o projeto no **IntelliJ IDEA** (Community ou Ultimate).
 
@@ -42,7 +41,6 @@ Atualmente o plugin ainda não está publicado na JetBrains Marketplace, então 
 Na **primeira inicialização** do plugin, será solicitado que você insira sua **API Key da Discloud**.
 Você também pode alterar depois em:
 
-```
 File → Settings → Tools → Discloud Settings
 
 > Sua chave é salva localmente em um arquivo de configuração do IntelliJ (`discloud.xml`) e usada em todos os commits seguintes.
