@@ -26,6 +26,8 @@
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
         <applicationConfigurable instance="com.discloudplugin.discloud.settings.ApiKeyConfigurable"/>
+
+        <applicationService serviceImplementation="com.discloudplugin.discloud.PluginLauncher" />
     </extensions>
 
     <actions>
