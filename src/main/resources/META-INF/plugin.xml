@@ -5,7 +5,7 @@
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
-    <name>Discloud for Kotlin/Java Engineers</name>
+    <name>Discloud</name>
 
     <version>1.0.0</version>
 
@@ -44,8 +44,15 @@
 
         <action class="com.discloudplugin.discloud.actions.CreateDiscloudConfig"
                 id="CreateDiscloudConfigAction"
-                text="Create Discloud.Config"
+                text="Create discloud.config"
                 description="Create the discloud config file.">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </action>
+
+        <action class="com.discloudplugin.discloud.actions.UploadProjectToDiscloudAction"
+                id="UploadProject"
+                text="Upload in Discloud"
+                description="Upload this project in Discloud.">
             <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
         </action>
 

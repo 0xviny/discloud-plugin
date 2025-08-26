@@ -1,102 +1,155 @@
-# Discloud Plugin for IntelliJ IDEA
+# Discloud Plugin for Jetbrains
 
 [![IntelliJ Plugin](https://img.shields.io/badge/IntelliJ-Plugin-blue.svg)](https://plugins.jetbrains.com/)  
 [![Discloud](https://img.shields.io/badge/Powered%20by-Discloud-purple.svg)](https://discloud.com/)
 
-Um simples **plugin para IntelliJ IDEA** que permite enviar seus projetos **.jar** diretamente para a [Discloud](https://discloud.com/), a melhor hospedagem Brasileira para projetos grandes e pequenos.  
-Ideal para desenvolvedores Kotlin/Java que desejam agilizar o processo de deploy.
+Um plugin simples para **IntelliJ IDEA** que facilita enviar seus projetos para a **Discloud** diretamente do IDE. Suporta deploy via `.jar` e upload completo de projetos (cria projeto na Discloud via `/upload`), além de oferecer uma Tool Window para gerenciar aplicações.
 
 ---
 
-## ✨ Funcionalidades
+## ✨ Destaques
 
-- 🔑 Configuração da **API Key da Discloud** diretamente no IntelliJ (Settings → Discloud Settings)  
-- 🚀 Clique com o botão direito em qualquer `.jar` no seu projeto e envie instantaneamente para a Discloud (**Commit Discloud**)  
-- 🛠️ Integração com a [API oficial da Discloud](https://discloud.github.io/apidoc/)  
-- 📦 Persistência da API Key nas configurações do IntelliJ  
-- 📋 Feedback direto no IDE com status e resposta da API  
-- 🖥️ **Tool Window** para gerenciar aplicativos: listar apps, status online/offline, iniciar/parar e visualizar logs  
+- Envio rápido de artefatos via clique-direito (**Commit Discloud**)  
+- Upload completo do projeto (chama `POST /upload`) quando houver `discloud.config` no root do projeto  
+- Tool Window para listar e gerenciar apps (start / restart / stop / backup / logs)  
+- Suporte multi-linguagem para commits e empacotamento:
+  - **Java** (.jar)
+  - **Go**
+  - **Rust**
+  - **Python**
+  - **PHP**
+  - **Ruby**
+- Detecção automática de runtime por arquivos de configuração (ex.: `go.mod`, `Cargo.toml`, `requirements.txt`, `composer.json`, `Gemfile`, `pom.xml`, `build.gradle`) ou por extensão de arquivo  
+- Para Go e Rust, tenta executar `go build` / `cargo build --release` e faz upload do binário gerado quando possível  
+- Fallback: se não for possível compilar, gera um ZIP do projeto e envia  
+- Exclusões inteligentes ao zipar (`.git`, `node_modules`, `venv`, `__pycache__`, `target`, `build`, `.idea`, `.gradle`)  
+- API Key configurável e persistida nas Settings do IntelliJ (solicita ao usuário se não estiver configurada)
 
 ---
 
-## 📥 Instalação
+## 📦 Funcionalidades
 
-Atualmente o plugin ainda não está publicado na JetBrains Marketplace, então para testar:
+### Commit Discloud
+- Envia `.jar` ou artefato gerado para um app existente via endpoint `PUT /app/{id}/commit`.
+- Detecta linguagem, tenta buildar (quando aplicável) e cria o artefato apropriado (JAR, binário zipado ou ZIP do projeto).
+- Envia também um campo `runtime` quando aplicável para ajudar a Discloud a identificar o tipo de aplicação.
 
-1. Clone este repositório:
+### Upload (criar projeto)
+- Se existir `discloud.config` na raiz do projeto, o plugin permite empacotar todo o projeto em um ZIP e chamar `POST /upload` para criar o projeto na Discloud.
+- Não executa upload se `discloud.config` não existir.
+
+### Tool Window
+- Lista aplicações vinculadas à sua conta Discloud (nome, status online/offline, RAM).
+- Botões: Start, Restart, Stop, Backup, Logs.
+- Download de backup direto para a pasta do projeto.
+- Visualização de logs em uma janela dentro do IDE.
+
+### UX e Segurança
+- Operações longas rodam em background (ProgressManager / Tasks).
+- Mensagens e erros são mostrados via JOptionPane / Messages.
+- Validações de seleção e presença de token para evitar erros.
+- Executar builds localmente significa rodar código — use apenas com projetos confiáveis.
+
+---
+
+## 🔧 Requisitos
+
+- IntelliJ IDEA (Community ou Ultimate)  
+- Para builds automáticos de Go e Rust é necessário ter `go` e `cargo` instalados no sistema  
+- Verifique limites e permissões da sua conta Discloud antes de usar `/upload`
+
+---
+
+## 📥 Instalação (modo dev / sandbox)
+
+1. Clone o repositório:
    ```bash
    git clone https://github.com/0xviny/discloud-plugin.git
    cd discloud-plugin
 
-2. Abra o projeto no **IntelliJ IDEA** (Community ou Ultimate)
-3. Rode o plugin:
+2. Abra no IntelliJ IDEA.
+3. Execute o plugin em sandbox:
 
-    * Vá em **Gradle Tool Window → Tasks → intellij → runIde**
-    * O IntelliJ abrirá em modo sandbox com o plugin carregado
+    * `Gradle Tool Window → Tasks → intellij → runIde`
 
 ---
 
 ## 🔑 Configuração da API Key
 
-Na **primeira inicialização** do plugin, será solicitado que você insira sua **API Key da Discloud**.
-Você também pode alterar depois em:
+Na primeira execução, o plugin pedirá sua **API Key da Discloud**. Também é possível alterar em:
 
 `File → Settings → Tools → Discloud Settings`
 
-> Sua chave é salva localmente em um arquivo de configuração do IntelliJ (`discloud.xml`) e usada em todos os commits seguintes.
+A chave é salva nas configurações do IntelliJ e reutilizada em operações futuras.
 
 ---
 
 ## 🚀 Como usar
 
-1. Compile ou gere seu `.jar` do projeto
-2. No **Project Explorer**, clique com o botão direito no arquivo `.jar`
-3. Clique em **Commit Discloud**
-4. O plugin fará o upload para a Discloud e mostrará o resultado no IntelliJ
+### Commit de um `.jar`
+
+1. Gere o `.jar` do seu projeto.
+2. No Project Explorer, clique com o botão direito no `.jar`.
+3. Selecione **Commit Discloud**.
+4. Escolha o app destino (quando solicitado) e aguarde o upload.
+
+### Upload completo (cria projeto)
+
+1. Adicione `discloud.config` na raiz do projeto.
+2. Execute a ação **Upar na Discloud** (ou equivalente no plugin).
+3. O plugin empacota o projeto em ZIP e chama `POST /upload`.
+4. Aguarde o retorno e confira o ID / mensagem da API.
 
 ---
 
-## 📝 Histórico de Versões
+## 🖼️ Screenshots
 
-### 1.0.0 - Initial Version
+### Tool Window
+![Tool Window](docs/screenshots/tool-window.png)
 
-* Adicionado **Tool Window** para gerenciar apps da Discloud (listar apps, status online/offline)
-* Implementado botão **Start** e **Stop** para iniciar/parar aplicativos
-* Implementado botão **Refresh** para atualizar a lista de apps
-* Implementado botão **Logs** para visualizar os logs do terminal de cada app
-* Integração completa com a **Discloud API** usando API Key configurável
-* Status dos apps exibido diretamente no **Tool Window** do IntelliJ
-* Persistência da **API Key** nas configurações do IntelliJ
-* Ação de **Commit Discloud** para enviar `.jar` diretamente para a Discloud via clique direito
-* Feedback direto no IDE com respostas da API (upload, start, stop, logs)
+### Actions row (Start / Stop / Restart / Backup / Logs)
+![Actions Row](docs/screenshots/actions-row.png)
+
+### Logs modal
+![Logs Modal](docs/screenshots/logs-modal.png)
+
+---
+
+## 📝 Changelog
+
+### 1.0.0 — Initial
+
+* Tool Window para gerenciar aplicações
+* Commit de `.jar` e suporte a múltiplas linguagens (Java, Go, Rust, Python, PHP, Ruby)
+* Upload completo via `/upload` quando `discloud.config` estiver presente
+* Build automático para Go e Rust quando possível, com fallback para ZIP
+* Exclusões ao empacotar e UX com feedback no IDE
 
 ---
 
 ## 📌 Roadmap
 
-* [x] Commit de arquivos `.jar` via API da Discloud
-* [x] Persistência e configuração da API Key
-* [x] Tool Window lateral para gerenciar aplicativos (listar apps, iniciar/parar/reiniciar, logs etc.)
-* [ ] Suporte a commits automáticos após build
-* [x] Publicação no JetBrains Marketplace
+* Suporte a deploy automático pós-build
+* Upload incremental (enviar apenas arquivos mudados)
+* Mostrar notificações no IDE em vez de modais
+* Suporte a variáveis de ambiente e mapeamento de portas no `discloud.config`
+* Publicação no JetBrains Marketplace
 
 ---
 
 ## 🤝 Contribuindo
 
-Contribuições são bem-vindas!
-Abra uma **Issue** ou envie um **Pull Request** com melhorias, correções ou novas funcionalidades.
+Contribuições são bem-vindas. Abra uma Issue para discutir mudanças ou envie um Pull Request com a sua melhoria.
 
 ---
 
-## 📜 Licença
+## ⚖️ Licença
 
-Este projeto é distribuído sob a licença **MIT**
-Veja o arquivo [LICENSE](LICENSE) para mais informações
+Distribuído sob a licença **MIT**. Veja o arquivo `LICENSE` para detalhes.
 
 ---
 
 ## 💙 Créditos
 
-* [Discloud](https://discloud.com/) — hospedagem oficial
-* [IntelliJ Platform SDK](https://plugins.jetbrains.com/docs/intellij/welcome.html) — base para desenvolvimento de plugins
+* Discloud — hospedagem utilizada e APIs
+* IntelliJ Platform SDK — base para desenvolvimento de plugins
