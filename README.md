@@ -105,13 +105,13 @@ A chave é salva nas configurações do IntelliJ e reutilizada em operações fu
 ## 🖼️ Screenshots
 
 ### Tool Window
-![Tool Window](docs/screenshots/tool-window.png)
+![Tool Window](docs/screenshots/panel.png)
 
-### Actions row (Start / Stop / Restart / Backup / Logs)
-![Actions Row](docs/screenshots/actions-row.png)
+### Actions row (Upload, Commit)
+![Actions Row](docs/screenshots/botoes-doc.gif)
 
 ### Logs modal
-![Logs Modal](docs/screenshots/logs-modal.png)
+![Logs Modal](docs/screenshots/doc-logs.gif)
 
 ---
 
