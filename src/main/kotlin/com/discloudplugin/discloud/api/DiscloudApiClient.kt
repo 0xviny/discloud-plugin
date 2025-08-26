@@ -1,12 +1,16 @@
 package com.discloudplugin.discloud.api
 
+import org.json.JSONObject
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.decodeFromString
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import java.util.concurrent.TimeUnit
+import java.io.File
+import java.net.URL
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 @Serializable
 data class UserResponse(val status: String, val message: String, val user: UserData)
@@ -91,10 +95,38 @@ class DiscloudApiClient(private val token: String) {
         }
     }
 
+    fun restartApp(appId: String) {
+        val req = buildRequest("/app/$appId/restart", "PUT")
+        client.newCall(req).execute().use { resp ->
+            if (!resp.isSuccessful) throw RuntimeException("Restart failed: ${resp.code}")
+        }
+    }
+
     fun stopApp(appId: String) {
         val req = buildRequest("/app/$appId/stop", "PUT")
         client.newCall(req).execute().use { resp ->
             if (!resp.isSuccessful) throw RuntimeException("Stop failed: ${resp.code}")
+        }
+    }
+
+    fun getBackup(appId: String, projectBasePath: String) {
+        val req = buildRequest("/app/$appId/backup", "GET")
+        client.newCall(req).execute().use { resp ->
+            if (!resp.isSuccessful) throw RuntimeException("Backup failed: ${resp.code}")
+
+            val bodyStr = resp.body?.string() ?: throw RuntimeException("Resposta vazia")
+            val json = JSONObject(bodyStr)
+
+            if (json.getString("status") == "ok") {
+                val backupUrl = json.getJSONObject("backups").getString("url")
+
+                val backupFile = File(projectBasePath, "backup_$appId.zip")
+                URL(backupUrl).openStream().use { input ->
+                    Files.copy(input, backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                }
+            } else {
+                throw RuntimeException("Erro no backup: ${json.optString("message")}")
+            }
         }
     }
 
