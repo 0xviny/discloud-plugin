@@ -105,14 +105,16 @@ A chave é salva nas configurações do IntelliJ e reutilizada em operações fu
 ## 🖼️ Screenshots
 
 ### Tool Window
-![Tool Window](docs/screenshots/panel.png)
+![Tool Window](docs/screenshots/panel2.png)
 
 ### Actions row (Upload, Commit)
-![Actions Row](docs/screenshots/botoes-doc.gif)
+![Actions Row](docs/screenshots/buttons.gif)
 
 ### Logs modal
-![Logs Modal](docs/screenshots/doc-logs.gif)
+![Logs Modal](docs/screenshots/logs.gif)
 
+### Import Code
+![Import Code](docs/screenshots/import.gif)
 ---
 
 ## 📝 Changelog

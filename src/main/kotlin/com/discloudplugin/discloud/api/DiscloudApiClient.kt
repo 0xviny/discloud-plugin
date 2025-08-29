@@ -173,6 +173,23 @@ class DiscloudApiClient(private val token: String) {
         }
     }
 
+    data class UpdateAppRequest(
+        val avatarURL: String?,
+        val name: String?
+    )
+
+    fun updateApp(appId: String, name: String? = null, avatarURL: String? = null) {
+        val jsonObj = JSONObject()
+        name?.let { jsonObj.put("name", it) }
+        avatarURL?.let { jsonObj.put("avatarURL", it) }
+        if (jsonObj.length() == 0) return
+        val body = jsonObj.toString().toRequestBody("application/json".toMediaType())
+        val req = buildRequest("/app/$appId/profile", "PUT", body)
+        client.newCall(req).execute().use { resp ->
+            if (!resp.isSuccessful) throw RuntimeException("Update app failed: ${resp.code}")
+        }
+    }
+
     fun getAppTeam(appId: String): List<TeamMemberData> {
         val req = buildRequest("/app/$appId/team")
         client.newCall(req).execute().use { resp ->

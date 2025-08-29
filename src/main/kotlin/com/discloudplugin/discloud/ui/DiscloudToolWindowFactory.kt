@@ -4,6 +4,7 @@ import com.discloudplugin.discloud.api.AppInfoData
 import com.discloudplugin.discloud.api.DiscloudApiClient
 import com.discloudplugin.discloud.api.TeamMemberData
 import com.discloudplugin.discloud.settings.ApiKeyState
+import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
@@ -13,7 +14,14 @@ import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import java.awt.BorderLayout
 import java.awt.Dimension
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
+import java.io.BufferedOutputStream
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.nio.file.Files
+import java.util.zip.ZipInputStream
 import javax.swing.*
 
 class DiscloudToolWindowFactory : ToolWindowFactory {
@@ -40,7 +48,9 @@ class DiscloudToolWindowFactory : ToolWindowFactory {
         val appsPanel = JPanel(BorderLayout())
         val appsTop = JPanel()
         val refreshAppsBtn = JButton("Refresh")
+        val importBtn = JButton("Import Code")
         appsTop.add(refreshAppsBtn)
+        appsTop.add(importBtn)
         appsPanel.add(appsTop, BorderLayout.NORTH)
         val appsList = JBList<String>()
         val appsScroll = JBScrollPane(appsList)
@@ -52,6 +62,7 @@ class DiscloudToolWindowFactory : ToolWindowFactory {
         val backupMenu = JMenuItem("Backup")
         val logsMenu = JMenuItem("Logs")
         val ramMenu = JMenuItem("Edit Ram")
+        val editMenu = JMenuItem("Edit App")
         val deleteMenu = JMenuItem("Delete")
         appsPopup.add(startMenu)
         appsPopup.add(restartMenu)
@@ -60,8 +71,8 @@ class DiscloudToolWindowFactory : ToolWindowFactory {
         appsPopup.add(backupMenu)
         appsPopup.add(logsMenu)
         appsPopup.add(ramMenu)
+        appsPopup.add(editMenu)
         appsPopup.add(deleteMenu)
-        appsList.componentPopupMenu = appsPopup
         fun reloadAppsList() {
             ApplicationManager.getApplication().executeOnPooledThread {
                 try {
@@ -77,6 +88,21 @@ class DiscloudToolWindowFactory : ToolWindowFactory {
             }
         }
         refreshAppsBtn.addActionListener { reloadAppsList() }
+        appsList.addMouseListener(object : MouseAdapter() {
+            private fun showPopup(e: MouseEvent) {
+                val index = appsList.locationToIndex(e.point)
+                if (index != -1) {
+                    appsList.selectedIndex = index
+                    appsPopup.show(e.component, e.x, e.y)
+                }
+            }
+            override fun mousePressed(e: MouseEvent) {
+                if (e.isPopupTrigger) showPopup(e)
+            }
+            override fun mouseReleased(e: MouseEvent) {
+                if (e.isPopupTrigger) showPopup(e)
+            }
+        })
         startMenu.addActionListener {
             val sel = appsList.selectedValue ?: return@addActionListener
             if (!sel.contains("- ")) {
@@ -88,9 +114,7 @@ class DiscloudToolWindowFactory : ToolWindowFactory {
                 try {
                     client.startApp(id)
                 } catch (ex: Exception) {
-                    ApplicationManager.getApplication().invokeLater {
-                        Messages.showErrorDialog(project, "Erro ao iniciar app: ${ex.message}", "Discloud")
-                    }
+                    SwingUtilities.invokeLater { Messages.showErrorDialog(project, "Erro ao iniciar app: ${ex.message}", "Discloud") }
                 } finally {
                     reloadAppsList()
                 }
@@ -107,9 +131,7 @@ class DiscloudToolWindowFactory : ToolWindowFactory {
                 try {
                     client.restartApp(id)
                 } catch (ex: Exception) {
-                    ApplicationManager.getApplication().invokeLater {
-                        Messages.showErrorDialog(project, "Erro ao reiniciar app: ${ex.message}", "Discloud")
-                    }
+                    SwingUtilities.invokeLater { Messages.showErrorDialog(project, "Erro ao reiniciar app: ${ex.message}", "Discloud") }
                 } finally {
                     reloadAppsList()
                 }
@@ -126,9 +148,7 @@ class DiscloudToolWindowFactory : ToolWindowFactory {
                 try {
                     client.stopApp(id)
                 } catch (ex: Exception) {
-                    ApplicationManager.getApplication().invokeLater {
-                        Messages.showErrorDialog(project, "Erro ao parar app: ${ex.message}", "Discloud")
-                    }
+                    SwingUtilities.invokeLater { Messages.showErrorDialog(project, "Erro ao parar app: ${ex.message}", "Discloud") }
                 } finally {
                     reloadAppsList()
                 }
@@ -145,13 +165,9 @@ class DiscloudToolWindowFactory : ToolWindowFactory {
             ApplicationManager.getApplication().executeOnPooledThread {
                 try {
                     client.getBackup(id, projectPath)
-                    ApplicationManager.getApplication().invokeLater {
-                        Messages.showInfoMessage(project, "Backup baixado com sucesso em $projectPath/backup_$id.zip", "Discloud")
-                    }
+                    SwingUtilities.invokeLater { Messages.showInfoMessage(project, "Backup baixado com sucesso em $projectPath/backup_$id.zip", "Discloud") }
                 } catch (ex: Exception) {
-                    ApplicationManager.getApplication().invokeLater {
-                        Messages.showErrorDialog(project, "Erro ao baixar backup: ${ex.message}", "Discloud")
-                    }
+                    SwingUtilities.invokeLater { Messages.showErrorDialog(project, "Erro ao baixar backup: ${ex.message}", "Discloud") }
                 } finally {
                     reloadAppsList()
                 }
@@ -177,9 +193,7 @@ class DiscloudToolWindowFactory : ToolWindowFactory {
                         JOptionPane.showMessageDialog(appsPanel, scrollPane, "Logs: $id", JOptionPane.INFORMATION_MESSAGE)
                     }
                 } catch (ex: Exception) {
-                    ApplicationManager.getApplication().invokeLater {
-                        Messages.showErrorDialog(project, "Erro ao buscar logs: ${ex.message}", "Discloud")
-                    }
+                    SwingUtilities.invokeLater { Messages.showErrorDialog(project, "Erro ao buscar logs: ${ex.message}", "Discloud") }
                 }
             }
         }
@@ -200,16 +214,57 @@ class DiscloudToolWindowFactory : ToolWindowFactory {
             ApplicationManager.getApplication().executeOnPooledThread {
                 try {
                     client.updateRam(id, ramValue)
-                    ApplicationManager.getApplication().invokeLater {
-                        Messages.showInfoMessage(project, "RAM alterada com sucesso para $ramValue MB", "Discloud")
-                    }
+                    SwingUtilities.invokeLater { Messages.showInfoMessage(project, "RAM alterada com sucesso para $ramValue MB", "Discloud") }
                 } catch (ex: Exception) {
-                    ApplicationManager.getApplication().invokeLater {
-                        Messages.showErrorDialog(project, "Erro ao alterar RAM: ${ex.message}", "Discloud")
-                    }
+                    SwingUtilities.invokeLater { Messages.showErrorDialog(project, "Erro ao alterar RAM: ${ex.message}", "Discloud") }
                 } finally {
                     reloadAppsList()
                 }
+            }
+        }
+        editMenu.addActionListener {
+            try {
+                val sel = appsList.selectedValue ?: return@addActionListener
+                if (!sel.contains("- ")) {
+                    Messages.showErrorDialog(project, "Selecione um app válido", "Discloud")
+                    return@addActionListener
+                }
+                val id = sel.substringAfterLast("- ").trim()
+                val options = arrayOf("Avatar", "Name")
+                val choiceIndex = JOptionPane.showOptionDialog(
+                    null,
+                    "O que deseja editar?",
+                    "Editar App",
+                    JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    options,
+                    options[0]
+                )
+                if (choiceIndex < 0) return@addActionListener
+                val selected = options[choiceIndex]
+                val newValue = when (selected) {
+                    "Avatar" -> Messages.showInputDialog(project, "Digite a nova URL do avatar:", "Editar Avatar", null)
+                    "Name" -> Messages.showInputDialog(project, "Digite o novo nome:", "Editar Nome", null)
+                    else -> null
+                } ?: return@addActionListener
+
+                ApplicationManager.getApplication().executeOnPooledThread {
+                    try {
+                        if (selected == "Avatar") {
+                            client.updateApp(id, avatarURL = newValue)
+                        } else {
+                            client.updateApp(id, name = newValue)
+                        }
+                        SwingUtilities.invokeLater { Messages.showInfoMessage(project, "App atualizado com sucesso", "Discloud") }
+                    } catch (ex: Throwable) {
+                        SwingUtilities.invokeLater { Messages.showErrorDialog(project, "Erro ao atualizar o app: ${ex.message}", "Discloud") }
+                    } finally {
+                        reloadAppsList()
+                    }
+                }
+            } catch (ex: Exception) {
+                SwingUtilities.invokeLater { Messages.showErrorDialog(project, "Erro ao atualizar o app: ${ex.message}", "Discloud") }
             }
         }
         deleteMenu.addActionListener {
@@ -223,12 +278,44 @@ class DiscloudToolWindowFactory : ToolWindowFactory {
                 try {
                     client.deleteApp(id)
                 } catch (ex: Exception) {
-                    ApplicationManager.getApplication().invokeLater {
-                        Messages.showErrorDialog(project, "Erro ao deletar app: ${ex.message}", "Discloud")
-                    }
+                    SwingUtilities.invokeLater { Messages.showErrorDialog(project, "Erro ao deletar app: ${ex.message}", "Discloud") }
                 } finally {
                     reloadAppsList()
                 }
+            }
+        }
+        importBtn.addActionListener {
+            try {
+                val sel = appsList.selectedValue ?: return@addActionListener
+                if (!sel.contains("- ")) {
+                    Messages.showErrorDialog(project, "Selecione um app válido", "Discloud")
+                    return@addActionListener
+                }
+                val id = sel.substringAfterLast("- ").trim()
+                val chooser = JFileChooser()
+                chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
+                chooser.dialogTitle = "Selecione a pasta onde deseja descompactar o código"
+                val result = chooser.showOpenDialog(appsPanel)
+                if (result != JFileChooser.APPROVE_OPTION) return@addActionListener
+                val targetDir = chooser.selectedFile
+                ApplicationManager.getApplication().executeOnPooledThread {
+                    try {
+                        val tempDir = Files.createTempDirectory("discloud_backup_").toFile()
+                        client.getBackup(id, tempDir.absolutePath)
+                        val backupFile = File(tempDir, "backup_${id}.zip")
+                        if (!backupFile.exists()) throw RuntimeException("Arquivo de backup não encontrado")
+                        unzip(backupFile, targetDir)
+                        SwingUtilities.invokeLater {
+                            ProjectUtil.openOrImport(targetDir.absolutePath, null, true)
+                        }
+                    } catch (t: Throwable) {
+                        SwingUtilities.invokeLater { Messages.showErrorDialog(project, "Erro ao importar código: ${t.message}", "Import Code") }
+                    } finally {
+                        reloadAppsList()
+                    }
+                }
+            } catch (ex: Exception) {
+                SwingUtilities.invokeLater { Messages.showErrorDialog(project, "Erro ao importar código: ${ex.message}", "Import Code") }
             }
         }
         tabs.addTab("Apps", appsPanel)
@@ -271,7 +358,6 @@ class DiscloudToolWindowFactory : ToolWindowFactory {
         teamPopup.add(teamLogs)
         teamPopup.add(teamRam)
         teamPopup.add(teamStatus)
-        teamList.componentPopupMenu = teamPopup
         var appsCache: List<AppInfoData> = emptyList()
         fun reloadTeamAppsCombo() {
             ApplicationManager.getApplication().executeOnPooledThread {
@@ -284,10 +370,7 @@ class DiscloudToolWindowFactory : ToolWindowFactory {
                         if (apps.isNotEmpty()) appsCombo.selectedIndex = 0
                     }
                 } catch (t: Throwable) {
-                    SwingUtilities.invokeLater {
-                        appsCombo.removeAllItems()
-                        Messages.showErrorDialog(project, "Erro ao listar apps: ${t.message}", "Team Manager")
-                    }
+                    SwingUtilities.invokeLater { appsCombo.removeAllItems(); Messages.showErrorDialog(project, "Erro ao listar apps: ${t.message}", "Team Manager") }
                 }
             }
         }
@@ -301,16 +384,27 @@ class DiscloudToolWindowFactory : ToolWindowFactory {
             ApplicationManager.getApplication().executeOnPooledThread {
                 try {
                     val team = client.getAppTeam(id)
-                    SwingUtilities.invokeLater {
-                        teamList.setListData(team.map { "${it.modID} - ${it.perms.joinToString(",")}" }.toTypedArray())
-                    }
+                    SwingUtilities.invokeLater { teamList.setListData(team.map { "${it.modID} - ${it.perms.joinToString(",")}" }.toTypedArray()) }
                 } catch (t: Throwable) {
-                    SwingUtilities.invokeLater {
-                        teamList.setListData(arrayOf("Erro: ${t.message}"))
-                    }
+                    SwingUtilities.invokeLater { teamList.setListData(arrayOf("Erro: ${t.message}")) }
                 }
             }
         }
+        teamList.addMouseListener(object : MouseAdapter() {
+            private fun showPopup(e: MouseEvent) {
+                val index = teamList.locationToIndex(e.point)
+                if (index != -1) {
+                    teamList.selectedIndex = index
+                    teamPopup.show(e.component, e.x, e.y)
+                }
+            }
+            override fun mousePressed(e: MouseEvent) {
+                if (e.isPopupTrigger) showPopup(e)
+            }
+            override fun mouseReleased(e: MouseEvent) {
+                if (e.isPopupTrigger) showPopup(e)
+            }
+        })
         refreshTeamAppsBtn.addActionListener { reloadTeamAppsCombo() }
         appsCombo.addActionListener { reloadTeamForSelectedApp() }
         addMember.addActionListener {
@@ -512,9 +606,7 @@ class DiscloudToolWindowFactory : ToolWindowFactory {
             ApplicationManager.getApplication().executeOnPooledThread {
                 try {
                     val status = client.teamStatus(appId)
-                    SwingUtilities.invokeLater {
-                        Messages.showInfoMessage(project, "App: ${status.name}\nID: ${status.id}\nOnline: ${status.online}\nRAM: ${status.ram}MB", "Team Status")
-                    }
+                    SwingUtilities.invokeLater { Messages.showInfoMessage(project, "App: ${status.name}\nID: ${status.id}\nOnline: ${status.online}\nRAM: ${status.ram}MB", "Team Status") }
                 } catch (t: Throwable) {
                     SwingUtilities.invokeLater { Messages.showErrorDialog(project, "Erro ao obter status: ${t.message}", "Team Manager") }
                 }
@@ -525,5 +617,29 @@ class DiscloudToolWindowFactory : ToolWindowFactory {
         toolWindow.contentManager.addContent(content)
         reloadAppsList()
         reloadTeamAppsCombo()
+    }
+
+    private fun unzip(zipFile: File, targetDir: File) {
+        ZipInputStream(FileInputStream(zipFile)).use { zis ->
+            var entry = zis.nextEntry
+            while (entry != null) {
+                val newFile = File(targetDir, entry.name)
+                if (entry.isDirectory) {
+                    newFile.mkdirs()
+                } else {
+                    newFile.parentFile?.mkdirs()
+                    BufferedOutputStream(FileOutputStream(newFile)).use { bos ->
+                        val buffer = ByteArray(4096)
+                        var len = zis.read(buffer)
+                        while (len > 0) {
+                            bos.write(buffer, 0, len)
+                            len = zis.read(buffer)
+                        }
+                    }
+                }
+                zis.closeEntry()
+                entry = zis.nextEntry
+            }
+        }
     }
 }
